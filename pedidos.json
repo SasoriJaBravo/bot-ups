@@ -1,0 +1,95 @@
+{
+  "1404517797299486822": {
+    "1005984464922492991": {
+      "nome": "Ares",
+      "id": "51",
+      "timestamp": 1755545637073,
+      "status": "aprovado",
+      "cargo": "1404517797358342242",
+      "responsavel": "1069959184520597546"
+    },
+    "1386088224610586848": {
+      "nome": "DINN_RP",
+      "id": "4420",
+      "timestamp": 1755552157088,
+      "status": "aprovado",
+      "cargo": "1404517797370921212",
+      "responsavel": "1069959184520597546"
+    },
+    "1013926626221883502": {
+      "nome": "xastro7",
+      "id": "4602",
+      "timestamp": 1755554751838,
+      "status": "reprovado",
+      "motivo": "Eu tô testando",
+      "responsavel": "1069959184520597546"
+    },
+    "1086712078947070122": {
+      "nome": "Marcolasandoval",
+      "id": "4549",
+      "timestamp": 1755562354997,
+      "status": "reprovado",
+      "cargo": "1404517797358342239",
+      "responsavel": "1069959184520597546",
+      "motivo": "Estou testando novamente essa bomba quadrada"
+    },
+    "830304100612046849": {
+      "nome": "Maria",
+      "id": "4489",
+      "timestamp": 1755798781024,
+      "status": "pendente"
+    }
+  },
+  "1393778040890462209": {
+    "1005984464922492991": {
+      "nome": "Palmeiras",
+      "id": "51",
+      "timestamp": 1755545769163,
+      "status": "aprovado",
+      "cargo": "1394703878812860567",
+      "responsavel": "1069959184520597546"
+    },
+    "1069959184520597546": {
+      "nome": "GURI DELAS",
+      "id": "69",
+      "timestamp": 1755546342581,
+      "status": "aprovado",
+      "cargo": "1394703600856600666",
+      "responsavel": "1069959184520597546"
+    }
+  },
+  "1365419023826948137": {
+    "1005984464922492991": {
+      "nome": "Ares",
+      "id": "51",
+      "timestamp": 1755543533038,
+      "status": "aprovado",
+      "cargo": "1378086652689252352",
+      "responsavel": "1069959184520597546"
+    },
+    "1069959184520597546": {
+      "nome": "Final didático (aceita só para testar pfvr)",
+      "id": "00",
+      "timestamp": 1755607212519,
+      "status": "aprovado",
+      "cargo": "1378086650604683335",
+      "responsavel": "844336803096166410"
+    },
+    "1127370753109663764": {
+      "nome": "Watifai Randola Di Frajola",
+      "id": "4613",
+      "timestamp": 1755613486732,
+      "status": "pendente"
+    }
+  },
+  "1071371725423526008": {
+    "1069959184520597546": {
+      "nome": "Eu",
+      "id": "41",
+      "timestamp": 1755573403210,
+      "status": "aprovado",
+      "cargo": "1119468668770861137",
+      "responsavel": "1069959184520597546"
+    }
+  }
+}
