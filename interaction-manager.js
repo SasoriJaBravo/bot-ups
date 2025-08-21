@@ -1,11 +1,10 @@
-// Sistema avançado de gerenciamento de interações para prevenir erro 10062
-// Implementa resposta ultra-rápida e processamento em background
+// Sistema simplificado e otimizado de gerenciamento de interações
+// Foco na funcionalidade e resposta rápida
 
 const INTERACTION_LIMITS = {
-  CRITICAL_RESPONSE_TIME: 1000,  // 1 segundo - tempo crítico para resposta
-  SAFE_RESPONSE_TIME: 1500,      // 1.5 segundos - tempo seguro
-  MAX_RESPONSE_TIME: 2800,       // 2.8 segundos - limite absoluto
-  DEFER_THRESHOLD: 800           // 800ms - quando deferir automaticamente
+  SAFE_RESPONSE_TIME: 2500,      // 2.5 segundos - tempo seguro
+  DEFER_THRESHOLD: 1500,         // 1.5 segundos - quando deferir
+  MAX_RESPONSE_TIME: 2900        // 2.9 segundos - limite absoluto
 };
 
 class InteractionManager {
@@ -15,64 +14,20 @@ class InteractionManager {
       total: 0,
       successful: 0,
       timeouts: 0,
-      deferred: 0,
-      emergencyResponses: 0
+      deferred: 0
     };
   }
 
-  // Registra uma interação para monitoramento
-  register(interaction) {
-    const data = {
-      id: interaction.id,
-      type: this.getInteractionType(interaction),
-      startTime: Date.now(),
-      status: 'pending',
-      hasResponded: false,
-      isDeferred: false
-    };
-    
-    this.activeInteractions.set(interaction.id, data);
-    this.stats.total++;
-    
-    // Auto-cleanup após 5 segundos
-    setTimeout(() => {
-      this.activeInteractions.delete(interaction.id);
-    }, 5000);
-    
-    return data;
-  }
-
-  // Verifica se uma interação ainda é segura para responder
-  isSafe(interaction) {
-    const data = this.activeInteractions.get(interaction.id);
-    if (!data) return false;
-    
-    const elapsed = Date.now() - data.startTime;
-    const isSafe = elapsed < INTERACTION_LIMITS.SAFE_RESPONSE_TIME && 
-                   !interaction.replied && 
-                   !interaction.deferred;
-    
-    if (!isSafe) {
-      console.log(`⚠️ Interação não é segura: ${elapsed}ms elapsed, replied: ${interaction.replied}, deferred: ${interaction.deferred}`);
-    }
-    
-    return isSafe;
-  }
-
-  // Resposta ultra-rápida (menos de 1 segundo)
+  // Resposta ultra-rápida - prioridade máxima
   async ultraFastResponse(interaction, options = {}) {
     try {
-      if (!this.isSafe(interaction)) {
-        console.log("❌ Interação não é segura para resposta ultra-rápida");
+      // Verificação mínima - apenas o essencial
+      if (interaction.replied || interaction.deferred) {
+        console.log("⚠️ Interação já foi respondida");
         return false;
       }
 
-      const data = this.activeInteractions.get(interaction.id);
-      if (data) {
-        data.hasResponded = true;
-        data.status = 'responding';
-      }
-
+      // Resposta imediata sem verificações complexas
       await interaction.reply({
         content: options.content || "⏳ Processando...",
         embeds: options.embeds || [],
@@ -80,100 +35,104 @@ class InteractionManager {
         flags: options.ephemeral !== false ? 64 : 0
       });
 
-      if (data) {
-        data.status = 'responded';
-        this.stats.successful++;
-      }
-
-      console.log("⚡ Resposta ultra-rápida enviada");
+      this.stats.successful++;
+      console.log("⚡ Resposta ultra-rápida enviada com sucesso");
       return true;
 
     } catch (error) {
-      const data = this.activeInteractions.get(interaction.id);
-      if (data) {
-        data.status = 'error';
-        data.error = error.message;
-      }
-
       if (error.code === 10062) {
-        console.error("❌ Erro 10062 na resposta ultra-rápida");
+        console.error("❌ Erro 10062: Interação expirada");
         this.stats.timeouts++;
       } else {
         console.error("❌ Erro na resposta ultra-rápida:", error.message);
       }
-
       return false;
     }
   }
 
-  // Resposta com defer automático se necessário
+  // Resposta inteligente simplificada
   async smartResponse(interaction, options = {}) {
     try {
-      if (!this.isSafe(interaction)) {
-        console.log("❌ Interação não é segura para resposta inteligente");
+      // Verificação básica
+      if (interaction.replied || interaction.deferred) {
+        console.log("⚠️ Interação já foi respondida ou deferida");
         return false;
       }
 
-      const data = this.activeInteractions.get(interaction.id);
-      const elapsed = data ? Date.now() - data.startTime : 0;
-      const shouldDefer = elapsed > INTERACTION_LIMITS.DEFER_THRESHOLD || options.forceDefer;
+      const startTime = Date.now();
+      const elapsed = startTime - interaction.createdTimestamp;
+      
+      // Se passou muito tempo, tenta resposta direta mesmo assim
+      if (elapsed > INTERACTION_LIMITS.SAFE_RESPONSE_TIME) {
+        console.log(`⚠️ Tempo elevado (${elapsed}ms), tentando resposta direta mesmo assim`);
+      }
 
-      if (shouldDefer) {
-        // Deferir primeiro
-        await interaction.deferReply({ flags: options.ephemeral !== false ? 64 : 0 });
-        
-        if (data) {
-          data.status = 'deferred';
-          data.isDeferred = true;
-          data.hasResponded = true;
-          this.stats.deferred++;
-        }
+      // Sempre tenta resposta direta primeiro
+      try {
+        await interaction.reply({
+          content: options.content || "⏳ Processando...",
+          embeds: options.embeds || [],
+          components: options.components || [],
+          flags: options.ephemeral !== false ? 64 : 0
+        });
 
-        console.log("⏳ Resposta deferida automaticamente");
-
-        // Depois editar se houver conteúdo
-        if (options.content || options.embeds) {
-          setTimeout(async () => {
-            try {
-              await interaction.editReply({
-                content: options.content,
-                embeds: options.embeds || [],
-                components: options.components || []
-              });
-              
-              if (data) {
-                data.status = 'completed';
-                this.stats.successful++;
-              }
-              
-              console.log("✅ Resposta editada após defer");
-            } catch (editError) {
-              console.error("❌ Erro ao editar resposta deferida:", editError.message);
-            }
-          }, 100);
-        }
-
+        this.stats.successful++;
+        console.log(`✅ Resposta direta enviada (${elapsed}ms)`);
         return true;
-      } else {
-        // Resposta direta
-        return await this.ultraFastResponse(interaction, options);
+
+      } catch (replyError) {
+        // Se falhou, tenta defer como fallback
+        if (replyError.code === 10062) {
+          console.log("❌ Resposta direta falhou (10062), interação expirada");
+          this.stats.timeouts++;
+          return false;
+        }
+
+        console.log("⚠️ Resposta direta falhou, tentando defer...");
+        
+        try {
+          await interaction.deferReply({ 
+            flags: options.ephemeral !== false ? 64 : 0 
+          });
+          
+          this.stats.deferred++;
+          console.log("⏳ Resposta deferida com sucesso");
+
+          // Edita depois se há conteúdo
+          if (options.content || options.embeds) {
+            setTimeout(async () => {
+              try {
+                await interaction.editReply({
+                  content: options.content,
+                  embeds: options.embeds || [],
+                  components: options.components || []
+                });
+                console.log("✅ Resposta editada após defer");
+              } catch (editError) {
+                console.error("❌ Erro ao editar resposta deferida:", editError.message);
+              }
+            }, 100);
+          }
+
+          return true;
+
+        } catch (deferError) {
+          console.error("❌ Defer também falhou:", deferError.message);
+          this.stats.timeouts++;
+          return false;
+        }
       }
 
     } catch (error) {
       console.error("❌ Erro na resposta inteligente:", error.message);
+      this.stats.timeouts++;
       return false;
     }
   }
 
-  // Atualização segura de resposta
+  // Atualização segura
   async safeUpdate(interaction, options = {}) {
     try {
-      const data = this.activeInteractions.get(interaction.id);
-      if (!data || !data.hasResponded) {
-        console.log("⚠️ Tentativa de atualizar interação não respondida");
-        return false;
-      }
-
       if (interaction.deferred) {
         await interaction.editReply({
           content: options.content,
@@ -188,31 +147,17 @@ class InteractionManager {
           flags: options.ephemeral !== false ? 64 : 0
         });
       } else {
-        console.log("⚠️ Interação em estado inconsistente para atualização");
+        console.log("⚠️ Interação não está em estado válido para atualização");
         return false;
       }
 
-      console.log("✅ Resposta atualizada com segurança");
+      console.log("✅ Resposta atualizada com sucesso");
       return true;
 
     } catch (error) {
-      if (error.code === 10062) {
-        console.error("❌ Erro 10062 na atualização");
-        this.stats.timeouts++;
-      } else {
-        console.error("❌ Erro na atualização segura:", error.message);
-      }
+      console.error("❌ Erro na atualização:", error.message);
       return false;
     }
-  }
-
-  // Determina o tipo de interação
-  getInteractionType(interaction) {
-    if (interaction.isChatInputCommand()) return 'SlashCommand';
-    if (interaction.isButton()) return 'Button';
-    if (interaction.isStringSelectMenu()) return 'SelectMenu';
-    if (interaction.isModalSubmit()) return 'Modal';
-    return 'Unknown';
   }
 
   // Obtém estatísticas
@@ -232,30 +177,40 @@ class InteractionManager {
 // Instância global
 const interactionManager = new InteractionManager();
 
-// Wrapper para operações seguras com timeout protection
+// Wrapper simplificado para operações com timeout protection
 async function executeWithTimeoutProtection(interaction, operation, options = {}) {
-  const data = interactionManager.register(interaction);
-  
   try {
     // Resposta inicial ultra-rápida
     const responded = await interactionManager.smartResponse(interaction, {
       content: options.initialMessage || "⏳ Processando...",
-      ephemeral: options.ephemeral !== false,
-      forceDefer: options.forceDefer || false
+      ephemeral: options.ephemeral !== false
     });
 
     if (!responded) {
-      console.log("❌ Falha na resposta inicial");
-      return false;
+      console.log("❌ Falha na resposta inicial - tentando resposta de emergência");
+      
+      // Tentativa de emergência
+      try {
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: "⏳ Processando sua solicitação...",
+            flags: 64
+          });
+          console.log("🚨 Resposta de emergência enviada");
+        }
+      } catch (emergencyError) {
+        console.error("❌ Resposta de emergência também falhou:", emergencyError.message);
+        return false;
+      }
     }
 
-    // Executar operação com timeout
+    // Executar operação com timeout reduzido
     let result = null;
     try {
       result = await Promise.race([
         operation(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Operation timeout')), 2000)
+          setTimeout(() => reject(new Error('Operation timeout')), 1500)
         )
       ]);
     } catch (opError) {
