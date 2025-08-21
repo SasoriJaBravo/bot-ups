@@ -1,11 +1,10 @@
-// Sistema otimizado e simplificado de gerenciamento de interações do Discord
-const { interactionManager, executeWithTimeoutProtection } = require('./interaction-manager.js');
+// Sistema ultra-simplificado de helpers do Discord
+const { interactionManager } = require('./interaction-manager.js');
 
-// Função de resposta rápida otimizada
+// Resposta rápida otimizada
 async function respostaRapida(interaction, opcoes) {
   try {
-    // Sempre tenta resposta ultra-rápida primeiro
-    return await interactionManager.ultraFastResponse(interaction, {
+    return await interactionManager.quickReply(interaction, {
       content: opcoes.content,
       embeds: opcoes.embeds,
       components: opcoes.components,
@@ -13,32 +12,23 @@ async function respostaRapida(interaction, opcoes) {
     });
   } catch (error) {
     console.error("❌ Erro na resposta rápida:", error.message);
-    
-    // Fallback: tenta resposta básica
-    try {
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: opcoes.content || "❌ Erro interno.",
-          flags: opcoes.ephemeral !== false ? 64 : 0
-        });
-        return true;
-      }
-    } catch (fallbackError) {
-      console.error("❌ Fallback também falhou:", fallbackError.message);
-    }
-    
     return false;
   }
 }
 
-// Função de atualização de resposta
+// Atualização de resposta
 async function atualizarResposta(interaction, opcoes) {
-  return await interactionManager.safeUpdate(interaction, {
-    content: opcoes.content,
-    embeds: opcoes.embeds,
-    components: opcoes.components,
-    ephemeral: opcoes.ephemeral
-  });
+  try {
+    return await interactionManager.updateReply(interaction, {
+      content: opcoes.content,
+      embeds: opcoes.embeds,
+      components: opcoes.components,
+      ephemeral: opcoes.ephemeral
+    });
+  } catch (error) {
+    console.error("❌ Erro na atualização:", error.message);
+    return false;
+  }
 }
 
 // Operação segura super simplificada
@@ -59,12 +49,7 @@ async function operacaoSegura(interaction, operacaoRapida, operacaoLenta, opcoes
     let resultado = null;
     if (operacaoRapida) {
       try {
-        resultado = await Promise.race([
-          operacaoRapida(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 1000)
-          )
-        ]);
+        resultado = await operacaoRapida();
         console.log("✅ Operação rápida concluída");
       } catch (err) {
         console.error("❌ Erro na operação rápida:", err.message);
